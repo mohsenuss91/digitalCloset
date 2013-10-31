@@ -30,9 +30,6 @@ void detectAndDraw( Mat& img,
 String cascadeName = "../../data/haarcascades/haarcascade_frontalface_alt.xml";
 String nestedCascadeName = "../../data/haarcascades/haarcascade_eye_tree_eyeglasses.xml";
 
-/*Load image file used*/
-IplImage *cloth_img = NULL;
-
 int main( int argc, const char** argv )
 {
     CvCapture* capture = 0;
@@ -50,12 +47,6 @@ int main( int argc, const char** argv )
     CascadeClassifier cascade, nestedCascade;
     double scale = 1;
 
-        /*load cloth image*/
-        cloth_img = cvLoadImage("cloth.jpg",1);
-        if(!cloth_img) {
-                printf("No such image file\n");                
-                return 0;
-        }
     for( int i = 1; i < argc; i++ )
     {
         cout << "Processing " << i << " " <<  argv[i] << endl;
@@ -176,15 +167,16 @@ _cleanup_:
                     }
                     else
                     {
-                            cerr << "Aw snap, couldn't read image " << buf << endl;
+                    	cerr << "Aw snap, couldn't read image " << buf << endl;
                     }
                 }
                 fclose(f);
             }
         }
     }
+
     cvDestroyWindow("result");
-    cvReleaseImage(&cloth_img);
+
     return 0;
 }
 
@@ -202,7 +194,7 @@ void detectAndDraw( Mat& img,
         CV_RGB(255,128,0),
         CV_RGB(255,255,0),
         CV_RGB(255,0,0),
-        CV_RGB(255,255,255)} ;
+        CV_RGB(255,0,255)} ;
     Mat gray, smallImg( cvRound (img.rows/scale), cvRound(img.cols/scale), CV_8UC1 );
 
     cvtColor( img, gray, CV_BGR2GRAY );
@@ -225,38 +217,11 @@ void detectAndDraw( Mat& img,
         vector<Rect> nestedObjects;
         Point center;
         Scalar color = colors[i%8];
-        int radius,rec_width,rec_height,i,j,k;
+        int radius;
         center.x = cvRound((r->x + r->width*0.5)*scale);
         center.y = cvRound((r->y + r->height*0.5)*scale);
         radius = cvRound((r->width + r->height)*0.25*scale);
-        /*Draw circle around face*/
-                 //circle( img, center, radius, color, 3, 8, 0 );             
-        /*Rectangle*/
-        CvPoint point1, point2;                
-        point1.x = r->x - r->width*0.9;
-        point2.x = r->x + r->width*1.8;
-        point1.y = r->y + r->height*0.9;
-        point2.y = r->y + r->height*4.1;
-        //calculate rect. width&height
-        rec_width = point2.x-point1.x;
-        rec_height = point2.y-point1.y;
-        /*Draw a rectangle around body*/
-                //cv::rectangle(img, point1, point2, CV_RGB(255,0,0), 3, 8, 0); 
-        printf("rec_height=%d , rec_width=%d\n" , rec_height, rec_width);
-        printf("Point1 is (%d,%d)\n",point1.x,point1.y);
-        printf("Point2 is (%d,%d)\n",point2.x,point2.y);
-        /*Put on clothes function*/
-         for(i = point1.y+30 ; i < 480 ; i++){
-            for(j = (point1.x)*3  ; j < (300+point1.x)*3 ; j = j+3){       /*if(signed char "-1" >> white[255])*/
-                if(cloth_img->imageData[(i-point1.y)*900+j-point1.x*3]==-1&&cloth_img->imageData[(i-point1.y)*900+j-point1.x*3+1]==-1&&cloth_img->imageData[(i-point1.y)*900+j-point1.x*3+2]==-1){}
-               else{
-                img.data[i*1920+j-48] = cloth_img->imageData[(i-point1.y)*900+j-point1.x*3];            
-                img.data[i*1920+j+1-48] = cloth_img->imageData[(i-point1.y)*900+j-point1.x*3+1];
-                img.data[i*1920+j+2-48] = cloth_img->imageData[(i-point1.y)*900+j-point1.x*3+2];
-                }
-            }
-        }
-        printf("data = %d\n",cloth_img->imageData[(i-point1.y)*900+j-point1.x*3]);
+        circle( img, center, radius, color, 3, 8, 0 );
         if( nestedCascade.empty() )
             continue;
         smallImgROI = smallImg(*r);
@@ -274,7 +239,7 @@ void detectAndDraw( Mat& img,
             center.y = cvRound((r->y + nr->y + nr->height*0.5)*scale);
             radius = cvRound((nr->width + nr->height)*0.25*scale);
             circle( img, center, radius, color, 3, 8, 0 );
-        }                                            
+        }
     }
     cv::imshow( "result", img );
 }
