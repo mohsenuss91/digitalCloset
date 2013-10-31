@@ -4,113 +4,11 @@
 
 #include <iostream>
 #include <stdio.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <time.h>
-FILE *fp, *fp1, *fp2,* fp3;
-char MotorA[3][50];
-char MotorB[3][50];
-void motor_control(int controlTime, int motorNumber, int orient);
-void motor_init();
 using namespace std;
 using namespace cv;
-
-void motor_init(){
-    int count=0;
-    strcpy(MotorA[0], "/sys/class/gpio/gpio134/direction");
-    strcpy(MotorA[1], "/sys/class/gpio/gpio135/direction");
-    strcpy(MotorA[2], "/sys/class/gpio/gpio136/direction");
-    strcpy(MotorB[0], "/sys/class/gpio/gpio137/direction");
-    strcpy(MotorB[1], "/sys/class/gpio/gpio138/direction");
-    strcpy(MotorB[2], "/sys/class/gpio/gpio139/direction");
-
-    
-
-    for(count=0;count<3;count++){
-        /*MOTOR A*/
-        if ((fp = fopen("/sys/class/gpio/export", "w")) == NULL){
-        printf("Cannot open export file.\n");
-        exit(1);
-        }
-        fprintf( fp, "%d", (134+count) );
-        fclose(fp);
-        if ((fp = fopen(MotorA[count], "rb+")) == NULL){
-            printf("Cannot open direction file.\n");
-            exit(1);
-        }
-        /*MOTOR B*/
-        if ((fp = fopen("/sys/class/gpio/export", "w")) == NULL){
-        printf("Cannot open export file.\n");
-        exit(1);
-        }
-        fprintf( fp, "%d", (137+count) );
-        fclose(fp);
-        if ((fp = fopen(MotorB[count], "rb+")) == NULL){
-            printf("Cannot open direction file.\n");
-            exit(1);
-        }
-    }
-
-}
-
-/*   controlTime = 0~1000
- *   motorNumber = 1 or 2   (A & B)
- *   orient = 1 or 2 (forward or backward)
- */
-void motor_control(int controlTime, int motorNumber, int orient){
-    while(controlTime > 0){
-        if (motorNumber == 1 && orient == 1)
-        {
-            fp1 = fopen(MotorA[0], "rb+");
-            fprintf(fp1, "high");
-            fp2 = fopen(MotorA[1], "rb+");
-            fprintf(fp2, "high");
-            fp3 = fopen(MotorA[2], "rb+");
-            fprintf(fp3, "low");
-            printf("1 out\n");
-            }
-        else if (motorNumber == 1 && orient == 2)
-        {
-            fp1 = fopen(MotorA[0], "rb+");
-            fprintf(fp1, "high");
-            fp2 = fopen(MotorA[2], "rb+");
-            fprintf(fp2, "high");
-            fp3 = fopen(MotorA[1], "rb+");
-            fprintf(fp3, "low");
-            printf("1 in\n");
-        }
-        else if (motorNumber == 2 && orient == 1)
-        {
-            fp1 = fopen(MotorB[0], "rb+");
-            fprintf(fp1, "high");
-            fp2 = fopen(MotorB[1], "rb+");
-            fprintf(fp2, "high");
-            fp3 = fopen(MotorB[2], "rb+");
-            fprintf(fp3, "low");
-            printf("2 out\n");
-        }
-        else if (motorNumber == 2 && orient == 2)
-        {
-            fp1 = fopen(MotorB[0], "rb+");
-            fprintf(fp1, "high");
-            fp2 = fopen(MotorB[2], "rb+");
-            fprintf(fp2, "high");
-            fp3 = fopen(MotorB[1], "rb+");
-            fprintf(fp3, "low");
-            printf("2 in\n");
-        }
-        else{
-
-        }
-        sleep(1);
-        fclose(fp1);
-        fclose(fp2);
-        fclose(fp3);
-        controlTime--;
-    }
-}
+/*Mouse control function decleared*/
+void onMouse1(int event,int x,int y,int flags,void* param);
+void onMouse2(int event,int x,int y,int flags,void* param);
 
 static void help()
 {
@@ -136,10 +34,17 @@ String nestedCascadeName = "../../data/haarcascades/haarcascade_eye_tree_eyeglas
 
 /*Load image file used*/
 IplImage *cloth_img = NULL;
+IplImage *cloth_img2 = NULL;
+
+/*closet*/
+char cloth1[]= {"cloth.jpg"};
+char cloth2[]= {"lena.jpg"};
 IplImage *cloth_output_frame = NULL;
 char cloth_img_R[150][150];
 char cloth_img_G[150][150];
 char cloth_img_B[150][150];
+
+
 
 int main( int argc, const char** argv )
 {
@@ -158,9 +63,17 @@ int main( int argc, const char** argv )
     CascadeClassifier cascade, nestedCascade;
     double scale = 1;
 
-        /*load cloth image*/
-        cloth_img = cvLoadImage("cloth1.jpg",1);
-                cv::imshow("cloth img",cloth_img);
+    /*construct closets*/
+    cvNamedWindow( "closet1", 1 );
+    cvNamedWindow( "closet2", 1 );
+    /*mouse control*/
+    cvSetMouseCallback("closet1",onMouse1,NULL);
+    cvSetMouseCallback("closet2",onMouse2,NULL);
+    /*load cloth image*/
+    cloth_img = cvLoadImage(cloth1,1);
+    cloth_img2 = cvLoadImage(cloth2,1);
+    cvShowImage("closet1",cloth_img);
+    cvShowImage("closet2",cloth_img2);
         if(!cloth_img) {
                 printf("No such image file\n");                
                 return 0;
@@ -440,4 +353,32 @@ IplImage * detectAndDraw( Mat& img,
     cv::imshow( "result", img );
         return cloth_img;
 
+}
+void onMouse1(int event,int x,int y,int flag,void* param){
+   
+   if(event==CV_EVENT_LBUTTONDOWN){
+            cvReleaseImage(&cloth_img);
+            cloth_img = cvLoadImage(cloth1,1);
+      }
+      if(event==CV_EVENT_LBUTTONUP){
+          printf("LLLLLLLLLLLLLLUUUUUUUUUUUUUUUUUUUUUUUOK\n");
+      }
+      if(flag==CV_EVENT_FLAG_LBUTTON){
+      }
+      if(event==CV_EVENT_MOUSEMOVE){
+      }
+  }
+void onMouse2(int event,int x,int y,int flag,void* param){
+    
+    if(event==CV_EVENT_LBUTTONDOWN){
+            cvReleaseImage(&cloth_img);
+            cloth_img = cvLoadImage(cloth2,1);
+    }
+    if(event==CV_EVENT_LBUTTONUP){
+          printf("LLLLLLLLLLLLLLUUUUUUUUUUUUUUUUUUUUUUUOK\n");
+    }
+    if(flag==CV_EVENT_FLAG_LBUTTON){
+    }
+    if(event==CV_EVENT_MOUSEMOVE){
+    }
 }
